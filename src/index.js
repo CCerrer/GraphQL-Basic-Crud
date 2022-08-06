@@ -1,6 +1,6 @@
-const express = require('express')
-const { graphqlHTTP } = require('express-graphql')
-const app = express()
+const Koa = require('koa')
+const mount = require('koa-mount')
+const { graphqlHTTP } = require('koa-graphql')
 const {
   GraphQLSchema,
   GraphQLObjectType,
@@ -9,6 +9,7 @@ const {
   GraphQLInt,
   GraphQLNonNull
 } = require('graphql')
+const app = new Koa()
 
 const authors = []
 const books = []
@@ -52,29 +53,32 @@ const mutationType = new GraphQLObjectType({
   name: 'Mutation',
   fields: () => ({
     addBook: {
-      type: BookType,
+      type: GraphQLString,
       args: {
         name: { type: GraphQLNonNull(GraphQLString) },
         authorId: { type: GraphQLNonNull(GraphQLInt) }
       },
       resolve: (_, args) => {
+        if (!authors.find(author => author.id === args.id)) return 'Author Id inexistent'
         const newBook = { id: books.length + 1, name: args.name, authorId: args.authorId }
         books.push(newBook)
-        return newBook
+        return 'Book added'
       }
     },
     updateBook: {
-      type: BookType,
+      type: GraphQLString,
       args: {
         id: { type: GraphQLInt },
         name: { type: GraphQLString },
         authorId: { type: GraphQLInt }
       },
       resolve: (_, args) => {
+        if (!books.find(book => book.id === args.id)) return 'Book Id inexistent'
+        if (!authors.find(author => author.id === args.id)) return 'Author Id inexistent'
         const actualBook = books.find(book => book.id === args.id)
         if (args.name) actualBook.name = args.name
         if (args.authorId) actualBook.authorId = args.authorId
-        return actualBook
+        return 'Book Updated'
       }
     },
     removeBook: {
@@ -83,29 +87,31 @@ const mutationType = new GraphQLObjectType({
         id: { type: GraphQLNonNull(GraphQLInt) }
       },
       resolve: (_, args) => {
+        if (!books.find(book => book.id === args.id)) return 'Book Id inexistent'
         const removingBook = books.find(book => book.id === args.id)
         books.splice(books.indexOf(removingBook), 1)
         return 'Book removed'
       }
     },
     addAuthor: {
-      type: AuthorType,
+      type: GraphQLString,
       args: {
         name: { type: GraphQLNonNull(GraphQLString) }
       },
       resolve: (_, args) => {
         const newAuthor = { id: authors.length + 1, name: args.name }
         authors.push(newAuthor)
-        return newAuthor
+        return 'Author added'
       }
     },
     updateAuthor: {
-      type: AuthorType,
+      type: GraphQLString,
       args: {
         id: { type: GraphQLInt },
         name: { type: GraphQLString }
       },
       resolve: (_, args) => {
+        if (!authors.find(author => author.id === args.id)) return 'Author Id inexistent'
         const actualAuthor = authors.find(author => author.id === args.id)
         actualAuthor.name = args.name
         return actualAuthor
@@ -117,6 +123,7 @@ const mutationType = new GraphQLObjectType({
         id: { type: GraphQLNonNull(GraphQLInt) }
       },
       resolve: (_, args) => {
+        if (!authors.find(author => author.id === args.id)) return 'Author Id inexistent'
         const removingAuthor = authors.find(author => author.id === args.id)
         authors.splice(authors.indexOf(removingAuthor), 1)
         return 'Author removed'
@@ -155,10 +162,17 @@ const AuthorType = new GraphQLObjectType({
   })
 })
 
-const schema = new GraphQLSchema({ query: queryType, mutation: mutationType })
-app.use('/graphql', graphqlHTTP({
-  schema,
-  graphiql: true
-}))
+const schema123 = new GraphQLSchema({ query: queryType, mutation: mutationType })
+
+app.use(
+  mount(
+    '/graphql',
+    graphqlHTTP({
+      schema: schema123,
+      graphiql: true
+    })
+  )
+)
+
 app.listen(4000)
 console.log('Running a GraphQL API server at http://localhost:4000/graphql')
