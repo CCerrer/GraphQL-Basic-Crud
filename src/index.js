@@ -58,14 +58,6 @@ const queryType = new GraphQLObjectType({
   })
 })
 
-/*
-
-Nome do dono(endero, quantidade de abelhas, cadastro do dono)
-quantidade de caixas de abelha
-quantidade de mel produzido Litros/ano
-
-*/
-
 const mutationType = new GraphQLObjectType({
   name: 'Mutation',
   fields: () => ({
