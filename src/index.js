@@ -11,152 +11,184 @@ const {
 } = require('graphql')
 const app = new Koa()
 
-const authors = []
-const books = []
+const creators = [
+  { id: 1, name: 'Rogerio1', adress: 'rua la do teu pai 1' },
+  { id: 2, name: 'Rogerio2', adress: 'rua la do teu pai 2' },
+  { id: 3, name: 'Rogerio3', adress: 'rua la do teu pai 3' }
+]
+const bees = [
+  { id: 1, name: 'Abelha generica 1', creatorId: 1, boxes: 5, production: 2 },
+  { id: 2, name: 'Abelha generica 2', creatorId: 1, boxes: 3, production: 8 },
+  { id: 3, name: 'Abelha generica 3', creatorId: 2, boxes: 1, production: 1 }
+]
 
 const queryType = new GraphQLObjectType({
   name: 'Query',
   fields: () => ({
-    books: {
-      type: new GraphQLList(BookType),
-      description: 'See all books',
-      resolve: () => books
+    bees: {
+      type: new GraphQLList(BeeType),
+      description: 'See all bees',
+      resolve: () => bees
     },
-    book: {
-      type: BookType,
-      description: 'See a book',
+    bee: {
+      type: BeeType,
+      description: 'See a bee',
       args: {
         id: { type: GraphQLNonNull(GraphQLInt) }
       },
       resolve: (_, args) => {
-        return books.find(book => book.id === args.id)
+        return bees.find(bee => bee.id === args.id)
       }
     },
-    authors: {
-      type: new GraphQLList(AuthorType),
-      description: 'See all authors',
-      resolve: () => authors
+    creators: {
+      type: new GraphQLList(CreatorType),
+      description: 'See all creators',
+      resolve: () => creators
     },
-    author: {
-      type: AuthorType,
-      description: 'See an author',
+    creator: {
+      type: CreatorType,
+      description: 'See an creator',
       args: {
         id: { type: GraphQLNonNull(GraphQLInt) }
       },
       resolve: (_, args) => {
-        return authors.find(author => author.id === args.id)
-      }
-    }
-  })
-})
-const mutationType = new GraphQLObjectType({
-  name: 'Mutation',
-  fields: () => ({
-    addBook: {
-      type: GraphQLString,
-      args: {
-        name: { type: GraphQLNonNull(GraphQLString) },
-        authorId: { type: GraphQLNonNull(GraphQLInt) }
-      },
-      resolve: (_, args) => {
-        if (!authors.find(author => author.id === args.id)) return 'Author Id inexistent'
-        const newBook = { id: books.length + 1, name: args.name, authorId: args.authorId }
-        books.push(newBook)
-        return 'Book added'
-      }
-    },
-    updateBook: {
-      type: GraphQLString,
-      args: {
-        id: { type: GraphQLInt },
-        name: { type: GraphQLString },
-        authorId: { type: GraphQLInt }
-      },
-      resolve: (_, args) => {
-        if (!books.find(book => book.id === args.id)) return 'Book Id inexistent'
-        if (!authors.find(author => author.id === args.id)) return 'Author Id inexistent'
-        const actualBook = books.find(book => book.id === args.id)
-        if (args.name) actualBook.name = args.name
-        if (args.authorId) actualBook.authorId = args.authorId
-        return 'Book Updated'
-      }
-    },
-    removeBook: {
-      type: GraphQLString,
-      args: {
-        id: { type: GraphQLNonNull(GraphQLInt) }
-      },
-      resolve: (_, args) => {
-        if (!books.find(book => book.id === args.id)) return 'Book Id inexistent'
-        const removingBook = books.find(book => book.id === args.id)
-        books.splice(books.indexOf(removingBook), 1)
-        return 'Book removed'
-      }
-    },
-    addAuthor: {
-      type: GraphQLString,
-      args: {
-        name: { type: GraphQLNonNull(GraphQLString) }
-      },
-      resolve: (_, args) => {
-        const newAuthor = { id: authors.length + 1, name: args.name }
-        authors.push(newAuthor)
-        return 'Author added'
-      }
-    },
-    updateAuthor: {
-      type: GraphQLString,
-      args: {
-        id: { type: GraphQLInt },
-        name: { type: GraphQLString }
-      },
-      resolve: (_, args) => {
-        if (!authors.find(author => author.id === args.id)) return 'Author Id inexistent'
-        const actualAuthor = authors.find(author => author.id === args.id)
-        actualAuthor.name = args.name
-        return actualAuthor
-      }
-    },
-    removeAuthor: {
-      type: GraphQLString,
-      args: {
-        id: { type: GraphQLNonNull(GraphQLInt) }
-      },
-      resolve: (_, args) => {
-        if (!authors.find(author => author.id === args.id)) return 'Author Id inexistent'
-        const removingAuthor = authors.find(author => author.id === args.id)
-        authors.splice(authors.indexOf(removingAuthor), 1)
-        return 'Author removed'
+        return creators.find(creator => creator.id === args.id)
       }
     }
   })
 })
 
-const BookType = new GraphQLObjectType({
-  name: 'bookType',
-  description: 'Schema for book',
+/*
+
+Nome do dono(endero, quantidade de abelhas, cadastro do dono)
+quantidade de caixas de abelha
+quantidade de mel produzido Litros/ano
+
+*/
+
+const mutationType = new GraphQLObjectType({
+  name: 'Mutation',
   fields: () => ({
-    id: { type: GraphQLNonNull(GraphQLInt) },
-    name: { type: GraphQLNonNull(GraphQLString) },
-    authorId: { type: GraphQLNonNull(GraphQLInt) },
-    author: {
-      type: AuthorType,
-      resolve: (book) => {
-        return authors.find(author => author.id === book.authorId)
+    addBee: {
+      type: GraphQLString,
+      args: {
+        name: { type: GraphQLNonNull(GraphQLString) },
+        creatorId: { type: GraphQLNonNull(GraphQLInt) },
+        boxes: { type: GraphQLNonNull(GraphQLInt) },
+        production: { type: GraphQLNonNull(GraphQLInt) }
+      },
+      resolve: (_, args) => {
+        if (!creators.find(creator => creator.id === args.creatorId)) return 'Creator Id inexistent'
+        const newBee = { id: bees.length + 1, name: args.name, creatorId: args.creatorId, boxes: args.boxes, production: args.production }
+        bees.push(newBee)
+        return 'Bee added'
+      }
+    },
+    updateBee: {
+      type: GraphQLString,
+      args: {
+        id: { type: GraphQLInt },
+        name: { type: GraphQLString },
+        creatorId: { type: GraphQLInt },
+        boxes: { type: GraphQLNonNull(GraphQLInt) },
+        production: { type: GraphQLNonNull(GraphQLInt) }
+      },
+      resolve: (_, args) => {
+        if (!bees.find(bee => bee.id === args.id)) return 'Bee Id inexistent'
+        if (!creators.find(creator => creator.id === args.id)) return 'creator Id inexistent'
+        const actualBee = bees.find(bee => bee.id === args.id)
+        if (args.name) actualBee.name = args.name
+        if (args.creatorId) actualBee.creatorId = args.creatorId
+        if (args.boxes) actualBee.boxes = args.boxes
+        if (args.production) actualBee.production = args.production
+        return 'Bee Updated'
+      }
+    },
+    removeBee: {
+      type: GraphQLString,
+      args: {
+        id: { type: GraphQLNonNull(GraphQLInt) }
+      },
+      resolve: (_, args) => {
+        if (!bees.find(bee => bee.id === args.id)) return 'Bee Id inexistent'
+        const removingBee = bees.find(bee => bee.id === args.id)
+        bees.splice(bees.indexOf(removingBee), 1)
+        return 'Bee removed'
+      }
+    },
+    addCreator: {
+      type: GraphQLString,
+      args: {
+        name: { type: GraphQLNonNull(GraphQLString) },
+        adress: { type: GraphQLNonNull(GraphQLString) }
+      },
+      resolve: (_, args) => {
+        const newCreator = { id: creators.length + 1, name: args.name, adress: args.adress }
+        creators.push(newCreator)
+        return 'Creator added'
+      }
+    },
+    updatecreator: {
+      type: GraphQLString,
+      args: {
+        id: { type: GraphQLInt },
+        name: { type: GraphQLString },
+        adress: { type: GraphQLNonNull(GraphQLString) }
+      },
+      resolve: (_, args) => {
+        if (!creators.find(creator => creator.id === args.id)) return 'creator Id inexistent'
+        const actualCreator = creators.find(creator => creator.id === args.id)
+        if (args.name) actualCreator.name = args.name
+        if (args.adress) actualCreator.adress = args.adress
+        return actualCreator
+      }
+    },
+    removecreator: {
+      type: GraphQLString,
+      args: {
+        id: { type: GraphQLNonNull(GraphQLInt) }
+      },
+      resolve: (_, args) => {
+        if (!creators.find(creator => creator.id === args.id)) return 'creator Id inexistent'
+        const removingcreator = creators.find(creator => creator.id === args.id)
+        creators.splice(creators.indexOf(removingcreator), 1)
+        return 'creator removed'
       }
     }
   })
 })
-const AuthorType = new GraphQLObjectType({
-  name: 'AuthorType',
-  description: 'Schema for author',
+
+const BeeType = new GraphQLObjectType({
+  name: 'BeeType',
+  description: 'Schema for bees',
   fields: () => ({
     id: { type: GraphQLNonNull(GraphQLInt) },
     name: { type: GraphQLNonNull(GraphQLString) },
-    books: {
-      type: GraphQLList(BookType),
-      resolve: (author) => {
-        return books.filter(book => book.authorId === author.id)
+    creatorId: { type: GraphQLNonNull(GraphQLInt) },
+    boxes: { type: GraphQLNonNull(GraphQLInt) },
+    production: {
+      type: GraphQLNonNull(GraphQLInt),
+      description: 'liter per year'
+    },
+    creator: {
+      type: CreatorType,
+      resolve: (bee) => {
+        return creators.find(creator => creator.id === bee.creatorId)
+      }
+    }
+  })
+})
+const CreatorType = new GraphQLObjectType({
+  name: 'CreatorType',
+  description: 'Schema for creators',
+  fields: () => ({
+    id: { type: GraphQLNonNull(GraphQLInt) },
+    name: { type: GraphQLNonNull(GraphQLString) },
+    adress: { type: GraphQLNonNull(GraphQLString) },
+    bees: {
+      type: GraphQLList(BeeType),
+      resolve: (creator) => {
+        return bees.filter(bee => bee.creatorId === creator.id)
       }
     }
   })
